@@ -6,13 +6,16 @@ RUN npm install -g tsx
 FROM base AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
+
+# Ensure NODE_ENV is not set to production during dependency installation
+ENV NODE_ENV=development
  
-# Install dependencies
+# Install dependencies (including devDependencies needed for build)
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
 RUN \
   if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
   elif [ -f package-lock.json ]; then npm ci --legacy-peer-deps; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
+  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install --frozen-lockfile; \
   else echo "Lockfile not found." && exit 1; \
   fi
  
@@ -21,7 +24,9 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
- 
+
+# Keep NODE_ENV as development for build (devDependencies needed)
+ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
  
 RUN \
