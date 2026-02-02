@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: genie-on-a-budget-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: genie-on-a-budget-user
+      POSTGRES_PASSWORD: genie-on-a-budget-pwd
+      POSTGRES_DB: genie-on-a-budget
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U genie-on-a-budget-user -d genie-on-a-budget"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # app:
+  #   build: .
+  #   container_name: genie-on-a-budget-app
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     # Override POSTGRES_URL to use the postgres service name instead of localhost
+  #     POSTGRES_URL: postgresql://genie-on-a-budget-user:genie-on-a-budget-pwd@postgres:5432/genie-on-a-budget
+  #     # Skip migrations in instrumentation.ts (handled by start.sh)
+  #     SKIP_INSTRUMENTATION_MIGRATIONS: "true"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+
+volumes:
+  postgres_data:
