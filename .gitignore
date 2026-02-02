@@ -41,7 +41,3 @@ yarn-error.log*
 /playwright-report/
 /blob-report/
 /playwright/*
-
-# data
-*.parquet
-!data/.gitkeep
