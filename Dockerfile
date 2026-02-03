@@ -6,9 +6,6 @@ RUN npm install -g tsx
 FROM base AS deps
 RUN apk add --no-cache libc6-compat python3 make g++
 WORKDIR /app
-
-# Ensure NODE_ENV is not set to production during dependency installation
-ENV NODE_ENV=development
  
 # Install dependencies (including devDependencies needed for build)
 COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* .npmrc* ./
@@ -25,8 +22,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Keep NODE_ENV as development for build (devDependencies needed)
-ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
  
 RUN \
@@ -40,7 +35,6 @@ RUN \
 FROM base AS runner
 WORKDIR /app
  
-ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
  
 RUN addgroup --system --gid 1001 nodejs
