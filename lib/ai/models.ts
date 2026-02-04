@@ -16,25 +16,13 @@ export const chatModels: ChatModel[] = [
     provider: "openai",
     description: "Fast and affordable for simple tasks",
   },
+  // Google
   {
-    id: "gpt-4.1",
-    name: "GPT-4.1",
-    provider: "openai",
-    description: "Fast and capable for complex tasks",
+    id: "gemini-2.5-flash",
+    name: "Gemini 2.5 Flash",
+    provider: "google",
+    description: "Ultra fast and affordable",
   },
-  {
-    id: "gpt-5.2",
-    name: "GPT-5.2",
-    provider: "openai",
-    description: "Most capable OpenAI model",
-  },
-  // Reasoning models (extended thinking)
-  {
-    id: "o4-mini",
-    name: "O4 Mini",
-    provider: "reasoning",
-    description: "Extended thinking for complex problems",
-  }
 ];
 
 // Group models by provider for UI

@@ -3,6 +3,7 @@ import {
   wrapLanguageModel,
 } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 
 const THINKING_SUFFIX_REGEX = /-thinking$/;
 
@@ -12,14 +13,25 @@ export function getLanguageModel(modelId: string) {
 
   if (isReasoningModel) {
     const modelIdToUse = modelId.replace(THINKING_SUFFIX_REGEX, "");
+    
+    if (modelIdToUse === "gemini-2.5-flash") {
+      return wrapLanguageModel({
+        model: google(modelIdToUse),
+        middleware: extractReasoningMiddleware({ tagName: "thinking" }),
+      });
+    }
 
     return wrapLanguageModel({
       model: openai(modelIdToUse),
       middleware: extractReasoningMiddleware({ tagName: "thinking" }),
     });
   }
-
-  return openai(modelId);
+  
+  if (modelId === "gemini-2.5-flash") {
+    return google(modelId);
+  } else {
+    return openai(modelId);
+  }
 }
 
 export function getTitleModel() {

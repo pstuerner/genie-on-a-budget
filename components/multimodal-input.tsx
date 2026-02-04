@@ -444,6 +444,7 @@ function PureModelSelectorCompact({
   // Provider display names
   const providerNames: Record<string, string> = {
     openai: "OpenAI",
+    google: "Google",
     reasoning: "Reasoning",
   };
 
