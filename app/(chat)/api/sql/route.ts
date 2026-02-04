@@ -39,10 +39,12 @@ export async function POST(request: Request) {
     const queryLower = query.toLowerCase();
     
     // Check for forbidden tables (basic check - prevent accessing User, Chat, Message, etc.)
+    // Match table references in FROM and JOIN clauses, not column names
     const forbiddenPatterns = [
-      '"user"', '"chat"', '"message"', '"vote"', '"document"', '"suggestion"', '"stream"',
-      'user ', 'chat ', 'message ', 'vote ', 'document ', 'suggestion ', 'stream ',
-      ' user', ' chat', ' message', ' vote', ' document', ' suggestion', ' stream',
+      'from "user"', 'from "chat"', 'from "message"', 'from "vote"', 'from "document"', 'from "suggestion"', 'from "stream"',
+      'join "user"', 'join "chat"', 'join "message"', 'join "vote"', 'join "document"', 'join "suggestion"', 'join "stream"',
+      'from user ', 'from chat ', 'from message ', 'from vote ', 'from document ', 'from suggestion ', 'from stream ',
+      'join user ', 'join chat ', 'join message ', 'join vote ', 'join document ', 'join suggestion ', 'join stream ',
     ];
     
     for (const pattern of forbiddenPatterns) {
