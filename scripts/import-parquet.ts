@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { ParquetReader } from "@dsnp/parquetjs";
 import postgres from "postgres";
 import { products, reviews } from "../lib/db/schema";
+import { sql } from "drizzle-orm";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -134,13 +135,38 @@ async function importParquetData(filePath: string, batchSize = 1000) {
     throw new Error("POSTGRES_URL not defined");
   }
 
+  // Check if data already exists
+  console.log("🔍 Checking for existing data...");
+  const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
+  const db = drizzle(connection);
+
+  try {
+    const productCount = await db.select({ count: sql<number>`count(*)` }).from(products);
+    const reviewCount = await db.select({ count: sql<number>`count(*)` }).from(reviews);
+    
+    const existingProducts = Number(productCount[0]?.count || 0);
+    const existingReviews = Number(reviewCount[0]?.count || 0);
+    
+    if (existingProducts > 0 || existingReviews > 0) {
+      console.log("ℹ️  Database already contains data:");
+      console.log(`   - Products: ${existingProducts}`);
+      console.log(`   - Reviews: ${existingReviews}`);
+      console.log("\n✅ Skipping import - data already exists");
+      await connection.end();
+      return;
+    }
+    
+    console.log("✅ No existing data found - proceeding with import\n");
+  } catch (err) {
+    console.error("❌ Error checking for existing data:", err);
+    await connection.end();
+    throw err;
+  }
+
   console.log(`📦 Opening Parquet file: ${filePath}`);
   
   const reader = await ParquetReader.openFile(filePath);
   const cursor = reader.getCursor();
-  
-  const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
-  const db = drizzle(connection);
 
   let row: ParquetRow | null = null;
   let rowCount = 0;
