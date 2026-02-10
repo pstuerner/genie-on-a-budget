@@ -1,15 +1,12 @@
 import { auth } from "@/app/(auth)/auth";
 import { ChatSDKError } from "@/lib/errors";
-import postgres from "postgres";
+import { databricksQuery } from "@/lib/db/databricks";
 import { z } from "zod";
 
 const requestSchema = z.object({
   query: z.string().min(1),
   limit: z.number().optional().default(100),
 });
-
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
 
 export async function POST(request: Request) {
   try {
@@ -34,31 +31,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Security: Only allow queries on Product and Review tables
-    const allowedTables = ['"product"', '"review"', 'product', 'review'];
-    const queryLower = query.toLowerCase();
-    
-    // Check for forbidden tables (basic check - prevent accessing User, Chat, Message, etc.)
-    // Match table references in FROM and JOIN clauses, not column names
-    const forbiddenPatterns = [
-      'from "user"', 'from "chat"', 'from "message"', 'from "vote"', 'from "document"', 'from "suggestion"', 'from "stream"',
-      'join "user"', 'join "chat"', 'join "message"', 'join "vote"', 'join "document"', 'join "suggestion"', 'join "stream"',
-      'from user ', 'from chat ', 'from message ', 'from vote ', 'from document ', 'from suggestion ', 'from stream ',
-      'join user ', 'join chat ', 'join message ', 'join vote ', 'join document ', 'join suggestion ', 'join stream ',
-    ];
-    
-    for (const pattern of forbiddenPatterns) {
-      if (queryLower.includes(pattern)) {
-        return Response.json(
-          {
-            error:
-              "Access denied. Only queries on Product and Review tables are allowed.",
-          },
-          { status: 403 }
-        );
-      }
-    }
-
     // Apply limit
     const effectiveLimit = Math.min(limit, 1000);
     let finalQuery = query.trim();
@@ -68,8 +40,8 @@ export async function POST(request: Request) {
       finalQuery += ` LIMIT ${effectiveLimit}`;
     }
 
-    // Execute the query
-    const result = await client.unsafe(finalQuery);
+    // Execute the query against Databricks
+    const result = await databricksQuery(finalQuery);
 
     return Response.json({
       success: true,

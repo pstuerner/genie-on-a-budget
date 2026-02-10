@@ -198,7 +198,20 @@ export async function POST(request: Request) {
           });
         }
       },
-      onError: () => "Oops, an error occurred!",
+      onError: (error) => {
+        // Check if it's a quota/rate limit error from the AI provider
+        if (
+          error instanceof Error &&
+          (error.message?.includes("quota") ||
+            error.message?.includes("RESOURCE_EXHAUSTED") ||
+            error.message?.includes("rate limit") ||
+            error.message?.includes("Rate limit"))
+        ) {
+          // Return a message that includes a parseable error code
+          return "[ERROR:provider_quota:chat] The AI provider's quota has been exceeded. Please wait a moment and try again.";
+        }
+        return "Oops, an error occurred!";
+      },
     });
 
     return createUIMessageStreamResponse({

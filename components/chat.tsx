@@ -80,6 +80,8 @@ export function Chat({
     setMessages,
     sendMessage,
     status,
+    error,
+    clearError,
     stop,
     regenerate,
     resumeStream,
@@ -135,19 +137,62 @@ export function Chat({
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
-    onError: (error) => {
-      if (error instanceof ChatSDKError) {
+    onError: (errorObj) => {
+      // Remove the incomplete assistant message that was created before the error
+      setMessages((currentMessages) => {
+        const lastMessage = currentMessages.at(-1);
+        // Only remove if the last message is from the assistant (incomplete response)
+        if (lastMessage?.role === "assistant") {
+          return currentMessages.slice(0, -1);
+        }
+        return currentMessages;
+      });
+
+      if (errorObj instanceof ChatSDKError) {
         if (
-          error.message?.includes("AI Gateway requires a valid credit card")
+          errorObj.message?.includes("AI Gateway requires a valid credit card")
         ) {
           setShowCreditCardAlert(true);
         } else {
           toast({
             type: "error",
-            description: error.message,
+            description: errorObj.message,
           });
         }
+      } else if (
+        errorObj instanceof Error &&
+        errorObj.message?.includes("[ERROR:provider_quota:chat]")
+      ) {
+        // Parse the error message to extract the user-friendly part
+        const message = errorObj.message.replace("[ERROR:provider_quota:chat]", "").trim();
+        toast({
+          type: "error",
+          description: message,
+        });
+      } else if (
+        errorObj instanceof Error &&
+        (errorObj.message?.includes("quota") ||
+          errorObj.message?.includes("RESOURCE_EXHAUSTED") ||
+          errorObj.message?.includes("AI provider's quota"))
+      ) {
+        // Fallback for quota errors without the special prefix
+        toast({
+          type: "error",
+          description: "The AI provider's quota has been exceeded. Please wait a moment and try again.",
+        });
+      } else {
+        // Handle unexpected errors
+        toast({
+          type: "error",
+          description: "An unexpected error occurred. Please try again.",
+        });
       }
+
+      // Clear the error state so the user can send new messages
+      // Use setTimeout to ensure the toast is shown first
+      setTimeout(() => {
+        clearError();
+      }, 0);
     },
   });
 

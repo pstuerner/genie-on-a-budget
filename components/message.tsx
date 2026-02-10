@@ -21,6 +21,7 @@ import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { SqlToolResult } from "./sql-result";
+import { SqlLoadingState } from "./sql-loading-state";
 
 const PurePreviewMessage = ({
   addToolApprovalResponse,
@@ -241,8 +242,10 @@ const PurePreviewMessage = ({
                   <Tool className="w-full" defaultOpen={true}>
                     <ToolHeader state={state} type="tool-executeSqlQuery" />
                     <ToolContent>
-                      {(state === "input-available" ||
-                        state === "approval-requested") && (
+                      {state === "input-available" && (
+                        <SqlLoadingState query={part.input.query} />
+                      )}
+                      {state === "approval-requested" && (
                         <ToolInput input={part.input} />
                       )}
                       {state === "approval-requested" && approvalId && (
