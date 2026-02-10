@@ -11,6 +11,12 @@ export type ChatModel = {
 export const chatModels: ChatModel[] = [
   // OpenAI
   {
+    id: "gpt-5.1",
+    name: "GPT-5.1",
+    provider: "openai",
+    description: "For complex tasks and data analysis",
+  },
+  {
     id: "gpt-4.1-mini",
     name: "GPT-4.1 Mini",
     provider: "openai",
@@ -22,6 +28,13 @@ export const chatModels: ChatModel[] = [
     name: "Gemini 2.5 Flash",
     provider: "google",
     description: "Ultra fast and affordable",
+  },
+  // Databricks
+  {
+    id: "databricks-meta-llama-3-3-70b-instruct",
+    name: "Llama 3.3 70B Instruct",
+    provider: "databricks",
+    description: "Open source model on Databricks",
   },
 ];
 

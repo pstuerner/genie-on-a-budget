@@ -439,12 +439,13 @@ function PureModelSelectorCompact({
     chatModels.find((m) => m.id === selectedModelId) ??
     chatModels.find((m) => m.id === DEFAULT_CHAT_MODEL) ??
     chatModels[0];
-  const [provider] = selectedModel.id.split("/");
+  const provider = selectedModel.provider;
 
   // Provider display names
   const providerNames: Record<string, string> = {
     openai: "OpenAI",
     google: "Google",
+    databricks: "Databricks",
     reasoning: "Reasoning",
   };
 
@@ -465,9 +466,7 @@ function PureModelSelectorCompact({
                 heading={providerNames[providerKey] ?? providerKey}
                 key={providerKey}
               >
-                {providerModels.map((model) => {
-                  const logoProvider = model.id.split("/")[0];
-                  return (
+                {providerModels.map((model) => (
                     <ModelSelectorItem
                       key={model.id}
                       onSelect={() => {
@@ -477,14 +476,13 @@ function PureModelSelectorCompact({
                       }}
                       value={model.id}
                     >
-                      <ModelSelectorLogo provider={logoProvider} />
+                      <ModelSelectorLogo provider={model.provider} />
                       <ModelSelectorName>{model.name}</ModelSelectorName>
                       {model.id === selectedModel.id && (
                         <CheckIcon className="ml-auto size-4" />
                       )}
                     </ModelSelectorItem>
-                  );
-                })}
+                  ))}
               </ModelSelectorGroup>
             )
           )}

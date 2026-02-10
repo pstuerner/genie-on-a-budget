@@ -40,40 +40,42 @@ function PureSqlSuggestions({ chatId, sendMessage }: SqlSuggestionsProps) {
   };
 
   return (
-    <div className="grid w-full gap-2 sm:grid-cols-2">
-      {sqlQuerySuggestions.slice(0, 6).map((suggestion, index) => {
-        const Icon = categoryIcons[suggestion.category];
-        const colorClass = categoryColors[suggestion.category];
-        
-        return (
-          <motion.div
-            key={index}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            initial={{ opacity: 0, y: 20 }}
-            transition={{ delay: 0.05 * index }}
-          >
-            <Button
-              variant="outline"
-              onClick={() => handleQuerySelect(suggestion)}
-              className={cn(
-                "h-auto w-full flex-col items-start gap-2 p-3 text-left transition-all hover:scale-[1.02]",
-                "group relative overflow-hidden"
-              )}
+    <div className="w-full max-h-[200px] overflow-y-auto sm:max-h-none sm:overflow-visible">
+      <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2">
+        {sqlQuerySuggestions.slice(0, 6).map((suggestion, index) => {
+          const Icon = categoryIcons[suggestion.category];
+          const colorClass = categoryColors[suggestion.category];
+          
+          return (
+            <motion.div
+              key={index}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.05 * index }}
             >
-              <div className="flex w-full items-center gap-2">
-                <div className={cn("rounded-md border p-1.5", colorClass)}>
-                  <Icon className="size-3.5" />
+              <Button
+                variant="outline"
+                onClick={() => handleQuerySelect(suggestion)}
+                className={cn(
+                  "h-auto w-full flex-col items-start gap-2 p-3 text-left transition-all hover:scale-[1.02]",
+                  "group relative overflow-hidden"
+                )}
+              >
+                <div className="flex w-full items-center gap-2">
+                  <div className={cn("rounded-md border p-1.5", colorClass)}>
+                    <Icon className="size-3.5" />
+                  </div>
+                  <span className="flex-1 text-sm font-medium">{suggestion.label}</span>
                 </div>
-                <span className="flex-1 text-sm font-medium">{suggestion.label}</span>
-              </div>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {suggestion.description}
-              </p>
-            </Button>
-          </motion.div>
-        );
-      })}
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {suggestion.description}
+                </p>
+              </Button>
+            </motion.div>
+          );
+        })}
+      </div>
     </div>
   );
 }

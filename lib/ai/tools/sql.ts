@@ -2,23 +2,20 @@ import "server-only";
 
 import { tool } from "ai";
 import { z } from "zod";
-import postgres from "postgres";
+import { databricksQuery } from "@/lib/db/databricks";
 
 // Re-export for backward compatibility
 export type { SqlQuerySuggestion } from "./sql-suggestions-data";
 export { sqlQuerySuggestions } from "./sql-suggestions-data";
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-
 export const executeSqlQuery = tool({
   description:
-    "Execute a SQL query against the database. Use this to analyze products, reviews, and other data. Always use double quotes for table names (e.g., \"Product\", \"Review\"). Results returned to you are limited to 100 rows for efficiency, but the user's UI will display all results.",
+    "Execute a SQL query against the Databricks data warehouse. Use this to analyze products, reviews, and other data. Use backtick-quoted three-part table names like `main`.`default`.`products`. Do NOT use double quotes for identifiers. Results returned to you are limited to 100 rows for efficiency, but the user's UI will display all results.",
   inputSchema: z.object({
     query: z
       .string()
       .describe(
-        "The SQL query to execute. Must be a SELECT query only. Use double quotes for table names. If you don't specify a LIMIT, results will be limited to 100 rows in your context (but full results shown to user)."
+        "The SQL query to execute. Must be a SELECT query only. If you don't specify a LIMIT, results will be limited to 100 rows in your context (but full results shown to user)."
       ),
     limit: z
       .number()
@@ -41,8 +38,8 @@ export const executeSqlQuery = tool({
       const originalQuery = input.query.trim();
       const hasExistingLimit = originalQuery.toLowerCase().includes("limit");
       
-      // Execute full query for UI (respecting any existing LIMIT)
-      const result = await client.unsafe(originalQuery);
+      // Execute full query against Databricks (respecting any existing LIMIT)
+      const result = await databricksQuery(originalQuery);
       
       // Convert to plain array for consistent typing
       const fullResultArray = Array.from(result);

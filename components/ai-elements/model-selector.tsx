@@ -161,22 +161,45 @@ export type ModelSelectorLogoProps = {
     | "scaleway"
     | "amazon-bedrock"
     | "cerebras"
+    | "databricks"
     | (string & {});
+};
+
+const LOCAL_LOGOS: Record<string, string> = {
+  openai: "/images/openai_logo.png",
+  google: "/images/google_logo.png",
+  databricks: "/images/databricks_logo.png",
 };
 
 export const ModelSelectorLogo = ({
   provider,
   className,
-}: ModelSelectorLogoProps) => (
-  <Image
-    alt={`${provider} logo`}
-    className={cn("size-3 dark:invert", className)}
-    height={12}
-    src={`https://models.dev/logos/${provider}.svg`}
-    unoptimized
-    width={12}
-  />
-);
+}: ModelSelectorLogoProps) => {
+  const localLogo = LOCAL_LOGOS[provider];
+
+  if (localLogo) {
+    return (
+      <Image
+        alt={`${provider} logo`}
+        className={cn("size-4 rounded-full object-cover", className)}
+        height={16}
+        src={localLogo}
+        width={16}
+      />
+    );
+  }
+
+  return (
+    <Image
+      alt={`${provider} logo`}
+      className={cn("size-3 dark:invert", className)}
+      height={12}
+      src={`https://models.dev/logos/${provider}.svg`}
+      unoptimized
+      width={12}
+    />
+  );
+};
 
 export type ModelSelectorLogoGroupProps = ComponentProps<"div">;
 
