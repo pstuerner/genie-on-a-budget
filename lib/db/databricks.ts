@@ -42,19 +42,49 @@ async function getSession(): Promise<IDBSQLSession> {
   return sessionInstance;
 }
 
+async function resetConnection(): Promise<void> {
+  try {
+    await sessionInstance?.close();
+  } catch {
+    // ignore errors during cleanup
+  }
+  try {
+    await clientInstance?.close();
+  } catch {
+    // ignore errors during cleanup
+  }
+  sessionInstance = null;
+  clientInstance = null;
+}
+
 /**
  * Execute a SQL statement against Databricks and return the result rows.
+ * If the cached session has gone stale (e.g. expired after idle timeout),
+ * the connection is reset and the query is retried once with a fresh session.
  */
 export async function databricksQuery(
   statement: string
 ): Promise<Record<string, unknown>[]> {
-  const session = await getSession();
-  const operation = await session.executeStatement(statement, {
-    runAsync: true,
-  });
-  const result = await operation.fetchAll();
-  await operation.close();
+  async function run(): Promise<Record<string, unknown>[]> {
+    const session = await getSession();
+    const operation = await session.executeStatement(statement, {
+      runAsync: true,
+    });
+    const result = await operation.fetchAll();
+    await operation.close();
+    return result as Record<string, unknown>[];
+  }
 
-  // The SDK returns an array of row objects – cast for convenience
-  return result as Record<string, unknown>[];
+  try {
+    return await run();
+  } catch (err) {
+    // Stale sessions typically surface as 400 responses from the gateway.
+    // Reset and retry once so callers get a transparent recovery.
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes("400") || message.includes("session")) {
+      await resetConnection();
+      return await run();
+    }
+    throw err;
+  }
 }
